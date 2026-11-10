@@ -1,0 +1,17 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /mensday_votes/{userId} {
+      // Cho phép người đã đăng nhập ẩn danh xem bảng kết quả chung.
+      allow read: if request.auth != null;
+      // Mỗi UID chỉ được tạo đúng một phiếu cho chính mình.
+      allow create: if request.auth != null
+        && request.auth.uid == userId
+        && request.resource.data.keys().hasOnly(['team', 'createdAt'])
+        && request.resource.data.team in ['gangster', 'kpop', 'agents', 'rock']
+        && request.resource.data.createdAt == request.time;
+      // Không cho sửa hoặc xóa phiếu đã gửi.
+      allow update, delete: if false;
+    }
+  }
+}
